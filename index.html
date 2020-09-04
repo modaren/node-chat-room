@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+</head>
+
+<body>
+  <div id="mess"></div>
+  <button onclick="sendMessage()">发送</button>
+</body>
+
+<script>
+  const name = prompt("请输入您的名字", "")
+  const mess = document.getElementById("mess");
+  const websocket = new WebSocket('ws://10.0.1.213:10086/')
+
+  websocket.onopen = () => {
+    console.log('websocket连接开启...')
+    const response = {
+      name:name,
+      state:'join',
+      info:''
+    }
+    websocket.send(JSON.stringify(response));
+  }
+
+  websocket.onmessage = event => {
+    const data = JSON.parse(event.data)
+    const p = document.createElement('p');
+    if (data.name===name&&data.state!=='system') {
+      p.style.textAlign = 'right'
+    }
+    p.innerText = data.info
+    mess.appendChild(p)
+  }
+
+  websocket.onclose = function (e) {
+    console.log("服务器关闭");
+  }
+
+  websocket.onerror = function () {
+    console.log("连接出错");
+  }
+
+  function sendMessage(info) {
+    const time = new Date();
+    const response = {
+      name:name,
+      state:'notice',
+      info:time + name + "点击了"
+    }
+    websocket.send(JSON.stringify(response));
+  }
+
+  window.onunload = () => {
+    const response = {
+      name:name,
+      state:'leave',
+      info:''
+    }
+    websocket.send(JSON.stringify(response));
+  }
+</script>
+
+</html>
